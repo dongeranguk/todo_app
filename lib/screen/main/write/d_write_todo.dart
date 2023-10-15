@@ -1,18 +1,20 @@
+import 'package:after_layout/after_layout.dart';
 import 'package:fast_app_base/common/common.dart';
 import 'package:fast_app_base/common/dart/extension/datetime_extension.dart';
+import 'package:fast_app_base/common/data/memory/vo_todo.dart';
 import 'package:fast_app_base/common/util/app_keyboard_util.dart';
-import 'package:fast_app_base/common/widget/constant_widget.dart';
 import 'package:fast_app_base/common/widget/scaffold/bottom_dialog_scaffold.dart';
 import 'package:fast_app_base/common/widget/w_round_button.dart';
 import 'package:fast_app_base/common/widget/w_rounded_container.dart';
 import 'package:flutter/material.dart';
 import 'package:nav/dialog/dialog.dart';
-import 'package:after_layout/after_layout.dart';
 
 import 'vo/vo_write_todo.dart';
 
 class WriteTodoDialog extends DialogWidget<WriteTodoResult> {
-  WriteTodoDialog({super.key});
+  final Todo? todoForEdit;
+
+  WriteTodoDialog({this.todoForEdit, super.key});
 
   @override
   DialogState<WriteTodoDialog> createState() => _WriteTodoDialogState();
@@ -23,6 +25,14 @@ class _WriteTodoDialogState extends DialogState<WriteTodoDialog>
   DateTime _selectedDate = DateTime.now();
   final textController = TextEditingController();
   final node = FocusNode();
+
+  @override
+  void initState() {
+    if (widget.todoForEdit != null) {
+      _selectedDate = widget.todoForEdit!.dueDate;
+      textController.text = widget.todoForEdit!.title;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,9 +60,10 @@ class _WriteTodoDialogState extends DialogState<WriteTodoDialog>
                 controller: textController,
               )),
               RoundButton(
-                text: '추가',
+                text: isEditMode? '완료' : '추가',
                 onTap: () {
-                  widget.hide(WriteTodoResult(_selectedDate, textController.text));
+                  widget.hide(
+                      WriteTodoResult(_selectedDate, textController.text));
                 },
               ),
             ],
@@ -67,6 +78,8 @@ class _WriteTodoDialogState extends DialogState<WriteTodoDialog>
     AppKeyboardUtil.show(context, node);
   }
 
+  bool get isEditMode => widget.todoForEdit != null;
+
   void _selectDate() async {
     final date = await showDatePicker(
       context: context,
@@ -75,7 +88,7 @@ class _WriteTodoDialogState extends DialogState<WriteTodoDialog>
       lastDate: _selectedDate.add(const Duration(days: 365 * 10)),
     );
 
-    if(date != null) {
+    if (date != null) {
       setState(() {
         _selectedDate = date;
       });
