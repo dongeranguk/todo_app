@@ -1,5 +1,8 @@
+import 'package:eva_icons_flutter/eva_icons_flutter.dart';
+import 'package:fast_app_base/common/data/memory/vo_todo.dart';
 import 'package:fast_app_base/screen/main/tab/tab_item.dart';
 import 'package:fast_app_base/screen/main/tab/tab_navigator.dart';
+import 'package:fast_app_base/screen/main/write/d_write_todo.dart';
 import 'package:flutter/material.dart';
 
 import '../../common/common.dart';
@@ -45,6 +48,13 @@ class MainScreenState extends State<MainScreen> with SingleTickerProviderStateMi
             bottom: !extendBody,
             child: pages,
           ),
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () async {
+            context.holder.addTodo();
+
+          },
+          child: const Icon(EvaIcons.plus),
         ),
         bottomNavigationBar: _buildBottomNavigationBar(context),
       ),
