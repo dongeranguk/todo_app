@@ -46,8 +46,8 @@ extension ContextExtension on BuildContext {
 
   Function(CustomTheme) get changeTheme => CustomThemeHolder.of(this).changeTheme;
 
-  TodoCubit get readTodoCubit => read();
+  TodoBloc get readTodoBloc => read();
 
-  TodoCubit get watchTodoCubit=> watch();
+  TodoBloc get watchTodoCubit=> watch();
 
 }
