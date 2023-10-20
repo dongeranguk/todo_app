@@ -2,25 +2,37 @@ import 'package:eva_icons_flutter/eva_icons_flutter.dart';
 import 'package:fast_app_base/screen/main/tab/tab_item.dart';
 import 'package:fast_app_base/screen/main/tab/tab_navigator.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../common/common.dart';
 import 'w_menu_drawer.dart';
 
-class MainScreen extends StatefulWidget {
-  const MainScreen({super.key});
+class MainScreenWrapper extends StatelessWidget {
+  const MainScreenWrapper({super.key});
 
   @override
-  State<MainScreen> createState() => MainScreenState();
+  Widget build(BuildContext context) {
+    return const SizedBox(child: _MainScreen());
+  }
 }
 
-class MainScreenState extends State<MainScreen> with SingleTickerProviderStateMixin, TodoDataProvider {
+class _MainScreen extends ConsumerStatefulWidget {
+  const _MainScreen({super.key});
+
+  @override
+  ConsumerState<_MainScreen> createState() => MainScreenState();
+}
+
+class MainScreenState extends ConsumerState<_MainScreen>
+    with SingleTickerProviderStateMixin {
   TabItem _currentTab = TabItem.home;
   final tabs = [TabItem.home, TabItem.favorite];
   final List<GlobalKey<NavigatorState>> navigatorKeys = [];
 
   int get _currentIndex => tabs.indexOf(_currentTab);
 
-  GlobalKey<NavigatorState> get _currentTabNavigationKey => navigatorKeys[_currentIndex];
+  GlobalKey<NavigatorState> get _currentTabNavigationKey =>
+      navigatorKeys[_currentIndex];
 
   bool get extendBody => true;
 
@@ -37,11 +49,13 @@ class MainScreenState extends State<MainScreen> with SingleTickerProviderStateMi
     return WillPopScope(
       onWillPop: _handleBackPressed,
       child: Scaffold(
-        extendBody: extendBody, //bottomNavigationBar 아래 영역 까지 그림
+        extendBody: extendBody,
+        //bottomNavigationBar 아래 영역 까지 그림
         drawer: const MenuDrawer(),
         body: Container(
           color: context.appColors.seedColor.getMaterialColorValues[200],
-          padding: EdgeInsets.only(bottom: extendBody ? 60 - bottomNavigationBarBorderRadius : 0),
+          padding: EdgeInsets.only(
+              bottom: extendBody ? 60 - bottomNavigationBarBorderRadius : 0),
           child: SafeArea(
             bottom: !extendBody,
             child: pages,
@@ -49,8 +63,7 @@ class MainScreenState extends State<MainScreen> with SingleTickerProviderStateMi
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: () async {
-            todoData.addTodo();
-
+            ref.readTodoHolder.addTodo();
           },
           child: const Icon(EvaIcons.plus),
         ),
@@ -127,13 +140,15 @@ class MainScreenState extends State<MainScreen> with SingleTickerProviderStateMi
     });
   }
 
-  BottomNavigationBarItem bottomItem(
-      bool activate, IconData iconData, IconData inActivateIconData, String label) {
+  BottomNavigationBarItem bottomItem(bool activate, IconData iconData,
+      IconData inActivateIconData, String label) {
     return BottomNavigationBarItem(
         icon: Icon(
           key: ValueKey(label),
           activate ? iconData : inActivateIconData,
-          color: activate ? context.appColors.iconButton : context.appColors.iconButtonInactivate,
+          color: activate
+              ? context.appColors.iconButton
+              : context.appColors.iconButtonInactivate,
         ),
         label: label);
   }
