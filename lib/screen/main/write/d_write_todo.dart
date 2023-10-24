@@ -1,4 +1,3 @@
-import 'package:after_layout/after_layout.dart';
 import 'package:fast_app_base/common/common.dart';
 import 'package:fast_app_base/common/dart/extension/datetime_extension.dart';
 import 'package:fast_app_base/common/data/memory/vo_todo.dart';
@@ -7,92 +6,77 @@ import 'package:fast_app_base/common/widget/scaffold/bottom_dialog_scaffold.dart
 import 'package:fast_app_base/common/widget/w_round_button.dart';
 import 'package:fast_app_base/common/widget/w_rounded_container.dart';
 import 'package:flutter/material.dart';
-import 'package:nav_hooks/dialog/dialog.dart';
+import 'package:nav_hooks/dialog/hook_dialog.dart';
 
+import '../../../common/hooks/use_show_keyboard.dart';
 import 'vo/vo_write_todo.dart';
 
-class WriteTodoDialog extends DialogWidget<WriteTodoResult> {
+class WriteTodoDialog extends HookDialogWidget<WriteTodoResult> {
   final Todo? todoForEdit;
 
   WriteTodoDialog({this.todoForEdit, super.key});
 
   @override
-  DialogState<WriteTodoDialog> createState() => _WriteTodoDialogState();
-}
-
-class _WriteTodoDialogState extends DialogState<WriteTodoDialog>
-    with AfterLayoutMixin {
-  DateTime _selectedDate = DateTime.now();
-  final textController = TextEditingController();
-  final node = FocusNode();
-
-  @override
-  void initState() {
-    if (widget.todoForEdit != null) {
-      _selectedDate = widget.todoForEdit!.dueDate;
-      textController.text = widget.todoForEdit!.title;
-    }
-    super.initState();
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final selectedDate = useState(DateTime.now());
+    final textController = useTextEditingController();
+    final node = useFocusNode();
+
+    useMemoized(() {
+      if (todoForEdit != null) {
+        selectedDate.value = todoForEdit!.dueDate;
+        textController.text = todoForEdit!.title;
+      }
+      showKeyboard(node);
+    });
+
     return BottomDialogScaffold(
         body: RoundedContainer(
-      color: context.backgroundColor,
-      child: Column(
-        children: [
-          Row(
+          child: Column(
             children: [
-              '할일을 작성해주세요.'.text.bold.size(18).make(),
-              spacer,
-              _selectedDate.formattedDate.text.make(),
-              IconButton(
-                  onPressed: _selectDate,
-                  icon: const Icon(Icons.calendar_month)),
-            ],
-          ),
-          height20,
-          Row(
-            children: [
-              Expanded(
-                  child: TextField(
-                focusNode: node,
-                controller: textController,
-              )),
-              RoundButton(
-                text: isEditMode? '완료' : '추가',
-                onTap: () {
-                  widget.hide(
-                      WriteTodoResult(_selectedDate, textController.text));
-                },
+              Row(
+                children: [
+                  '할 일을 작성해보세요.'.text.bold.size(18).make(),
+                  spacer,
+                  selectedDate.value.formattedDate.text.make(),
+                  IconButton(
+                      onPressed: () => _selectDate(context, selectedDate),
+                      icon: const Icon(Icons.calendar_month)),
+                ],
+              ),
+              height20,
+              Row(
+                children: [
+                  Expanded(
+                      child: TextField(
+                        focusNode: node,
+                        controller: textController,
+                      )),
+                  RoundButton(
+                      text: isEditMode ? '완료' : '추가',
+                      onTap: () {
+                        hide(WriteTodoResult(
+                            selectedDate.value, textController.text));
+                      }),
+                ],
               ),
             ],
-          )
-        ],
-      ),
-    ));
+          ),
+        ));
   }
 
-  @override
-  FutureOr<void> afterFirstLayout(BuildContext context) {
-    AppKeyboardUtil.show(context, node);
-  }
+  bool get isEditMode => todoForEdit != null;
 
-  bool get isEditMode => widget.todoForEdit != null;
-
-  void _selectDate() async {
+  void _selectDate(BuildContext context, ValueNotifier<DateTime> selectedDate) async {
     final date = await showDatePicker(
       context: context,
-      initialDate: _selectedDate,
-      firstDate: _selectedDate.subtract(const Duration(days: 365)),
-      lastDate: _selectedDate.add(const Duration(days: 365 * 10)),
+      initialDate: selectedDate.value,
+      firstDate: DateTime.now().subtract(const Duration(days: 365)),
+      lastDate: DateTime.now().add(const Duration(days: 365 * 10)),
     );
 
     if (date != null) {
-      setState(() {
-        _selectedDate = date;
-      });
+      selectedDate.value = date;
     }
   }
 }
